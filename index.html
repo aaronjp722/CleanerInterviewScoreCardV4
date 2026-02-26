@@ -1605,14 +1605,12 @@ function createScorecard(){
   const interviewer = document.getElementById('interviewerName')?.value.trim();
   const jira = jiraInput.value.trim();
 
-  const interviewStatus =
-    externalInterviewStatus ||
-    document.getElementById('interviewStatus')?.value ||
-    "";
+  const dropdownStatus = document.getElementById('interviewStatus')?.value || "";
+  const interviewStatus = externalInterviewStatus || dropdownStatus;
 
-  // =====================================================
-  // 🚨 IF NO SHOW → SEND DIRECTLY TO MISSED INTERVIEW DB
-  // =====================================================
+  // ==========================================
+  // 🚨 NO SHOW — SKIP ALL VALIDATION
+  // ==========================================
   if (interviewStatus === "no_show") {
 
     if (!candidate || !interviewer || !jira) {
@@ -1632,12 +1630,12 @@ function createScorecard(){
     .then(() => alert("No show recorded successfully."))
     .catch(() => alert("Failed to record no show."));
 
-    return; // 🛑 STOP — DO NOT CONTINUE
+    return; // 🛑 STOP EVERYTHING HERE
   }
 
-  // =====================================================
-  // 🔒 NORMAL SCORECARD VALIDATION
-  // =====================================================
+  // ==========================================
+  // 🔒 ONLY VALIDATE FOR REAL INTERVIEWS
+  // ==========================================
   if (!validateScorecard()) return;
 
   const getVal = (id) => Number(document.getElementById(id).value) || 0;
@@ -1667,7 +1665,6 @@ function createScorecard(){
     score_motivation: getVal('score_motivation'),
 
     pre_notes: document.getElementById('preNotes')?.value || "",
-
     notes_primary_skills: document.getElementById('notes_primary_skills')?.value || "",
     notes_experience: document.getElementById('notes_experience')?.value || "",
     notes_achiever_pattern: document.getElementById('notes_achiever_pattern')?.value || "",
@@ -1691,8 +1688,7 @@ function createScorecard(){
   })
   .then(() => alert("Scorecard submitted successfully."))
   .catch(() => alert("Submission failed."));
-}   
-
+}
 
 
 /* =========================================================
@@ -2163,6 +2159,7 @@ As part of this compare the candidate’s first impression when measured at the 
 </body>
 
 </html>
+
 
 
 
