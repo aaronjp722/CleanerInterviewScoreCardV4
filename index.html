@@ -1692,21 +1692,7 @@ function createScorecard(){
   .then(() => alert("Scorecard submitted successfully."))
   .catch(() => alert("Submission failed."));
 }   
-  /* =====================================================
-     WEBHOOK POST (CORS-SAFE CONFIG)
-     IMPORTANT: text/plain avoids preflight blocking
-  ====================================================== */
-  fetch(WEBHOOK_URL, {
-  method: "POST",
-  headers: {
-    "Content-Type": "application/json"
-  },
-  body: JSON.stringify(payload)
-})
 
-  .then(() => alert("Scorecard submitted successfully."))
-  .catch(() => alert("Submission failed."));
-}
 
 
 /* =========================================================
@@ -1772,7 +1758,7 @@ window.addEventListener("message", function (event) {
   externalInterviewStatus = event.data.value;
 });
 
-   
+
 </script>
 <!-- ================= INTERVIEW SCRIPT PANEL ================= -->
 <div id="scriptPanel" class="script-panel">
@@ -2177,6 +2163,7 @@ As part of this compare the candidate’s first impression when measured at the 
 </body>
 
 </html>
+
 
 
 
