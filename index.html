@@ -1598,38 +1598,62 @@ function validateScorecard() {
 ========================================================= */
 function createScorecard(){
 
-   // 🔒 HARD BLOCK — DO NOT REMOVE
-  if (!validateScorecard()) return;
-
   const jiraInput = document.getElementById('jiraCode');
   jiraInput.value = cleanJiraKey(jiraInput.value);
 
-  // Helper function to safely read numeric scores
+  const candidate = document.getElementById('candidateName')?.value.trim();
+  const interviewer = document.getElementById('interviewerName')?.value.trim();
+  const jira = jiraInput.value.trim();
+
+  const interviewStatus =
+    externalInterviewStatus ||
+    document.getElementById('interviewStatus')?.value ||
+    "";
+
+  // =====================================================
+  // 🚨 IF NO SHOW → SEND DIRECTLY TO MISSED INTERVIEW DB
+  // =====================================================
+  if (interviewStatus === "no_show") {
+
+    if (!candidate || !interviewer || !jira) {
+      alert("Candidate name, interviewer, and Jira code are required.");
+      return;
+    }
+
+    fetch("https://hook.us1.make.com/vala46m4utmn25v9g32b7n3eqh22n54a", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        jira_code: jira,
+        recorded_by: interviewer,
+        notes: "Missed scheduled interview"
+      })
+    })
+    .then(() => alert("No show recorded successfully."))
+    .catch(() => alert("Failed to record no show."));
+
+    return; // 🛑 STOP — DO NOT CONTINUE
+  }
+
+  // =====================================================
+  // 🔒 NORMAL SCORECARD VALIDATION
+  // =====================================================
+  if (!validateScorecard()) return;
+
   const getVal = (id) => Number(document.getElementById(id).value) || 0;
 
-  // Payload sent to Make.com (flat structure, no arrays)
   const payload = {
-    candidate_name: document.getElementById('candidateName').value,
+    candidate_name: candidate,
     interview_type: document.getElementById('interviewType').value,
-    interviewer: document.getElementById('interviewerName').value,
-    jira_code: jiraInput.value,
+    interviewer: interviewer,
+    jira_code: jira,
+    interview_status: interviewStatus,
 
-   interview_status: (
-  externalInterviewStatus ||
-  document.getElementById('interviewStatus')?.value ||
-  ""
-),
-
-
-
-
-    // Summary Totals
     basic_total: document.getElementById('basicTotal').textContent,
     core_total: document.getElementById('coreTotal').textContent,
     fit_total: document.getElementById('fitTotal').textContent,
     overall_total: document.getElementById('overallTotal').textContent,
 
-    // Individual Scores
     score_primary_skills: getVal('score_primary_skills'),
     score_experience: getVal('score_experience'),
     score_growth_trend: getVal('score_growth_trend'),
@@ -1642,54 +1666,32 @@ function createScorecard(){
     score_culture_fit: getVal('score_culture_fit'),
     score_motivation: getVal('score_motivation'),
 
-    // Pre first impression notes
     pre_notes: document.getElementById('preNotes')?.value || "",
 
-    // Per-Competency Notes
     notes_primary_skills: document.getElementById('notes_primary_skills')?.value || "",
     notes_experience: document.getElementById('notes_experience')?.value || "",
     notes_achiever_pattern: document.getElementById('notes_achiever_pattern')?.value || "",
-
     notes_technical_ability: document.getElementById('notes_technical_ability')?.value || "",
     notes_management_ability: document.getElementById('notes_management_ability')?.value || "",
     notes_team_skills: document.getElementById('notes_team_skills')?.value || "",
     notes_problem_solving: document.getElementById('notes_problem_solving')?.value || "",
-
     notes_job_fit: document.getElementById('notes_job_fit')?.value || "",
     notes_managerial_fit: document.getElementById('notes_managerial_fit')?.value || "",
     notes_culture_fit: document.getElementById('notes_culture_fit')?.value || "",
     notes_motivation: document.getElementById('notes_motivation')?.value || "",
 
-    // General Notes + Timestamp
     notes: document.getElementById('notes').value,
     submitted_at: new Date().toISOString()
   };
 
-// ==========================================
-// AUTO INSERT NO SHOW RECORD
-// ==========================================
-if (payload.interview_status === "no_show") {
-
-  fetch("https://hook.us1.make.com/vala46m4utmn25v9g32b7n3eqh22n54a", {
+  fetch(WEBHOOK_URL, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      jira_code: payload.jira_code,
-      recorded_by: payload.interviewer,
-      notes: "Missed scheduled interview"
-    })
+    body: JSON.stringify(payload)
   })
-  .catch(() => console.log("No-show webhook failed"));
-}
-
-fetch(WEBHOOK_URL, {
-  method: "POST",
-  headers: {
-    "Content-Type": "application/json"
-  },
-  body: JSON.stringify(payload)
-})
-   
+  .then(() => alert("Scorecard submitted successfully."))
+  .catch(() => alert("Submission failed."));
+}   
   /* =====================================================
      WEBHOOK POST (CORS-SAFE CONFIG)
      IMPORTANT: text/plain avoids preflight blocking
@@ -2175,6 +2177,7 @@ As part of this compare the candidate’s first impression when measured at the 
 </body>
 
 </html>
+
 
 
 
